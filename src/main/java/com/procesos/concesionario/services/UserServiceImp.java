@@ -2,6 +2,7 @@ package com.procesos.concesionario.services;
 
 import com.procesos.concesionario.models.User;
 import com.procesos.concesionario.repository.UserRepository;
+import com.procesos.concesionario.utils.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,8 @@ import java.util.Optional;
 public class UserServiceImp implements UserService {
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private JWTUtil jwtUtil;
 
     public User getUserById (Long id) {
         return userRepository.findById(id).get();
@@ -35,5 +38,15 @@ public class UserServiceImp implements UserService {
         userBD.setAddress(user.getAddress());
         userBD.setBirthday(user.getBirthday());
         return userRepository.save(userBD);
+    }
+
+    public String login(User user) {
+        Optional<User> userBD = userRepository.findByEmailAndPassword(user.getEmail(), user.getPassword());
+
+        if (userBD.isEmpty()) {
+            throw new RuntimeException("User is not found");
+        }
+
+        return jwtUtil.create(String.valueOf(userBD.get().getId()), String.valueOf(userBD.get().getEmail()));
     }
 }
